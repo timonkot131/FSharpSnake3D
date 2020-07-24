@@ -45,6 +45,7 @@ type Delay =
 type SnakeDirection =
     struct interface IComponentData
         val direction: float3
+        new(direction: float3) = {direction = direction}
     end
 
 type SnakeArrayBuffer =
