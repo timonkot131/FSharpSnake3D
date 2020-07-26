@@ -49,7 +49,7 @@
     <Content Include="packages.config" />
     <Compile Include="Extensions\Extensions.fs" />
     <Compile Include="Components\Components.fs" />
-    <Compile Include="Components\PlayerInput.fs" />
+    <Compile Include="Components\PlayerInputReceiver.fs" />
     <Compile Include="FSharpSnake.Scriptables\GameSettings.fs" />
     <Compile Include="Systems\SnakeController.fs" />
     <Compile Include="Systems\SnakeBounds.fs" />
@@ -77,6 +77,9 @@
     </Reference>
     <Reference Include="Unity.Entities">
       <HintPath>..\FSharpSnake3D\Library\ScriptAssemblies\Unity.Entities.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Entities.Hybrid">
+      <HintPath>..\FSharpSnake3D\Library\ScriptAssemblies\Unity.Entities.Hybrid.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Jobs">
       <HintPath>..\FSharpSnake3D\Library\ScriptAssemblies\Unity.Jobs.dll</HintPath>

@@ -37,6 +37,17 @@ module Extensions =
                 func entity (entityManager.GetComponentData<'T>(entity))
             entityArray.Dispose()|> ignore
 
+    type DynamicBuffer<'T when 'T: struct and 'T :> System.ValueType and 'T :(new: unit -> 'T)> with
+        member self.GetSlice(startId, endId) =
+            let s = defaultArg startId 0
+            let e = defaultArg endId self.Length - 1
+
+            let result = new DynamicBuffer<'T>()
+            result.CopyFrom(self)
+            result.RemoveRange(0, s)
+            result.RemoveRange(e, self.Length - e)
+            result
+
     type float3 with
            static member Up = float3(0.f, 1.f, 0.f)
            static member Down = float3(0.f, -1.f, 0.f)

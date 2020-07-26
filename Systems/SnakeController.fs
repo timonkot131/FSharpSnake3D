@@ -26,19 +26,23 @@ type CleanCreateJob =
 
         member private this.createEntity i pos =
             let e = this.commandBuffer.Instantiate(this.segmentToCopy)
+            Debug.Log(e.ToString() + " " + i.ToString())
             let last = this.snakeArray.Length - 1
-            match i with
-                | _ -> this.commandBuffer.AddComponent(e, new Translation(Value = pos))
+            this.commandBuffer.AddComponent(e, new Translation(Value = pos))
+            match i with        
                 | 0 -> this.commandBuffer.AddComponent(e, SnakeHead())
                 | x when x = last -> this.commandBuffer.AddComponent(e, SnakeEnd())
-   
+                | _ -> ()
+
         interface IJob with
             member this.Execute() =
             //    for entity in this.segmentsToDelete do
             //        this.commandBuffer.DestroyEntity(entity)
+              
                 this.snakeArray |> Seq.iteri this.createEntity
      end
 
+[<UpdateAfter(typeof<PlayerInputReceiver>)>]
 type SnakeController() =
     inherit SystemBase()  
     let gameSettings = Resources.Load<GameSettings> "ScriptableObjects/GameSettings"
@@ -70,28 +74,21 @@ type SnakeController() =
         
     member this.MoveSnake() =
         let direction = 
-            let array = this.DirectionQuery.ToEntityArray(Allocator.TempJob)
-            let direction = em.GetComponentData<SnakeDirection>(array.[0])
-            array.Dispose()
-            direction.direction
-
-        let segments = this.SegmentQuery.ToEntityArray(Allocator.TempJob)
-        segments |> Seq.iter (fun x -> Debug.Log(x.ToString()))
+            use array = this.DirectionQuery.ToEntityArray(Allocator.TempJob)
+            em.GetComponentData<SnakeDirection>(array.[0]).direction
 
         let snakeBuffer =
-            let array = this.SnakeArrayQuery.ToEntityArray(Allocator.TempJob)
-            let buffer = array.[0] |> em.GetBuffer<SnakeArrayBuffer>
-            array.Dispose()
-            buffer.Reinterpret<float3>()
+            use array = this.SnakeArrayQuery.ToEntityArray(Allocator.TempJob)
+            em.GetBuffer<SnakeArrayBuffer>(array.[0])
 
-        let transforme =
-            f
+        snakeBuffer.RemoveAt(snakeBuffer.Length-1)
+        snakeBuffer.Insert(0, new SnakeArrayBuffer(snakeBuffer.Reinterpret<float3>().[0] + direction))
 
-        let
-
+        let snakeArray = snakeBuffer.Reinterpret<float3>().ToNativeArray Allocator.TempJob
         let commandBuffer = new EntityCommandBuffer(Allocator.TempJob)
+        let segments = this.SegmentQuery.ToEntityArray(Allocator.TempJob)
 
-        em.DestroyEntity(this.SegmentQuery)
+        //em.DestroyEntity(this.SegmentQuery)
 
         CleanCreateJob(
             commandBuffer,
@@ -131,7 +128,8 @@ type SnakeController() =
             |> em.GetBuffer<SnakeArrayBuffer>
 
         buffer.Add (SnakeArrayBuffer(float3(0.f,0.f,0.f))) |> ignore
-        buffer.Add (SnakeArrayBuffer(float3(1.f,1.f,1.f))) |> ignore
+        buffer.Add (SnakeArrayBuffer(float3(1.f,0.f,0.f))) |> ignore
+        buffer.Add (SnakeArrayBuffer(float3(2.f,0.f,0.f))) |> ignore
                                                               
     override this.OnUpdate() =
         this.TickQuery.ForEach(fun(e) ->

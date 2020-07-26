@@ -7,19 +7,21 @@ open FSharpSnake.Extensions
 
 
 type PlayerInputReceiver() = 
-    inherit MonoBehaviour()
+    inherit SystemBase()
 
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
 
-    member this.SelfEntity =
-        let settings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null)
-        GameObjectConversionUtility.ConvertGameObjectHierarchy(this.gameObject, settings)
+    let directionEntity =
+        Debug.Log("aaee")
+        em.CreateArchetype [||]
+        |> em.CreateEntity
+        |> em.AddComponentF (new SnakeDirection(float3.Left))
 
-    member this.ApplyDirection dir = em.SetComponentData(this.SelfEntity, new SnakeDirection(dir))
+    member this.ApplyDirection dir =
+        Debug.Log(dir.ToString())
+        em.SetComponentData(directionEntity, new SnakeDirection(dir))
 
-    member this.Start() = em.AddComponentData(this.SelfEntity, new SnakeDirection(float3.Left))
-
-    member this.Update() =
+    override this.OnUpdate() =
         if Input.GetKeyUp KeyCode.Keypad4 then this.ApplyDirection float3.Left
         if Input.GetKeyUp KeyCode.Keypad6 then this.ApplyDirection float3.Right
         if Input.GetKeyUp KeyCode.Keypad2 then this.ApplyDirection float3.Back
