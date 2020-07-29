@@ -14,7 +14,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <WarningsAsErrors>3239;$(WarningsAsErrors)</WarningsAsErrors>
     <Name>FSharpSnake</Name>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -26,6 +27,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,9 +59,6 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\FSharpSnake3D\Library\ScriptAssemblies\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\FSharpSnake3D\Packages\FSharp.Core.4.6.2\lib\netstandard1.6\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
@@ -101,7 +100,9 @@
     </Reference>
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) C:\Users\Тимофей\FSharpSnake3D\Assets</PostBuildEvent>
+    <PostBuildEvent>copy $(TargetPath) C:\Users\Тимофей\FSharpSnake3D\Assets
+$(TargetDir)pdb2mdb $(TargetPath)
+copy $(TargetPath).mdb C:\Users\Тимофей\FSharpSnake3D\Assets</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

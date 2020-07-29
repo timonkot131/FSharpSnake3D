@@ -53,3 +53,7 @@ type SnakeArrayBuffer =
         val pos: float3
         new(pos: float3) = {pos = pos}
     end
+
+type SnakeCollision =
+    struct interface IComponentData
+    end

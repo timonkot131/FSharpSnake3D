@@ -10,7 +10,6 @@ open FSharpSnake.Scriptables
 open FSharpSnake.Extensions
 open FSharpSnake.Components
 
-
 type SnakeBounds() =
     inherit SystemBase()
     

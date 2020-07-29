@@ -11,37 +11,6 @@ open FSharpSnake.Extensions
 open FSharpSnake.Components
 open Unity.Jobs
 
-type CleanCreateJob =
-    struct 
-        val commandBuffer: EntityCommandBuffer
-        val snakeArray: NativeArray<float3>
-        val segmentsToDelete: NativeArray<Entity>
-        val segmentToCopy: Entity       
-
-        new (commandBuffer, snakeArray, segmentsToDelete, segmentToCopy) =
-            {commandBuffer = commandBuffer;
-            snakeArray = snakeArray;
-            segmentsToDelete = segmentsToDelete;
-            segmentToCopy = segmentToCopy}
-
-        member private this.createEntity i pos =
-            let e = this.commandBuffer.Instantiate(this.segmentToCopy)
-            Debug.Log(e.ToString() + " " + i.ToString())
-            let last = this.snakeArray.Length - 1
-            this.commandBuffer.AddComponent(e, new Translation(Value = pos))
-            match i with        
-                | 0 -> this.commandBuffer.AddComponent(e, SnakeHead())
-                | x when x = last -> this.commandBuffer.AddComponent(e, SnakeEnd())
-                | _ -> ()
-
-        interface IJob with
-            member this.Execute() =
-            //    for entity in this.segmentsToDelete do
-            //        this.commandBuffer.DestroyEntity(entity)
-              
-                this.snakeArray |> Seq.iteri this.createEntity
-     end
-
 [<UpdateAfter(typeof<PlayerInputReceiver>)>]
 type SnakeController() =
     inherit SystemBase()  
@@ -85,19 +54,20 @@ type SnakeController() =
         snakeBuffer.Insert(0, new SnakeArrayBuffer(snakeBuffer.Reinterpret<float3>().[0] + direction))
 
         let snakeArray = snakeBuffer.Reinterpret<float3>().ToNativeArray Allocator.TempJob
-        let commandBuffer = new EntityCommandBuffer(Allocator.TempJob)
-        let segments = this.SegmentQuery.ToEntityArray(Allocator.TempJob)
 
-        //em.DestroyEntity(this.SegmentQuery)
+        em.DestroyEntity(this.SegmentQuery)
 
-        CleanCreateJob(
-            commandBuffer,
-            snakeArray,
-            segments,
-            this.Segment).Schedule().Complete()
+        let createEntity i pos =
+            let e = em.Instantiate(this.Segment)
+            let last = snakeArray.Length - 1
+            em.AddComponentF (new Translation(Value = pos)) e |> ignore
+            match i with        
+                | 0 -> em.AddComponentF (new SnakeHead()) e                 |>ignore
+                | x when x = last -> em.AddComponentF (new SnakeEnd()) e    |>ignore
+                | _ -> ()
 
-        commandBuffer.Dispose()
-        segments.Dispose()
+        snakeArray |> Seq.iteri createEntity
+
         snakeArray.Dispose()
                 
     override this.OnCreate() =
