@@ -32,7 +32,7 @@ type SnakeBounds() =
         let p8 = float3(p4.x, p4.y + boundsSize.y, p4.z)
 
         let entityManager = World.DefaultGameObjectInjectionWorld.EntityManager 
-
+        
         let archetype = entityManager.CreateArchetype [|
             ComponentType.ReadOnly<CompositeScale>()
             ComponentType.ReadOnly<Translation>()
@@ -63,7 +63,6 @@ type SnakeBounds() =
             |> entityManager.SetComponentDataF (CompositeScale(Value = scale))
             |> entityManager.SetSharedComponentDataF (RenderMesh(mesh=lineMesh, material=lineMaterial))
             |> ignore
-            ()
 
         createLine(p1, p5); createLine(p2, p6); createLine(p3, p7); createLine(p4, p8)
         createLine(p1, p2); createLine(p1, p3); createLine(p4, p2); createLine(p4, p3)

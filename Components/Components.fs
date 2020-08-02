@@ -57,3 +57,7 @@ type SnakeArrayBuffer =
 type SnakeCollision =
     struct interface IComponentData
     end
+
+type SnakeFood =
+    struct interface IComponentData
+    end

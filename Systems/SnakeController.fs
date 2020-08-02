@@ -11,22 +11,27 @@ open FSharpSnake.Extensions
 open FSharpSnake.Components
 open Unity.Jobs
 
-[<UpdateAfter(typeof<PlayerInputReceiver>)>]
+[<UpdateAfter(typeof<FoodSpawn>)>]
 type SnakeController() =
     inherit SystemBase()  
+    
     let gameSettings = Resources.Load<GameSettings> "ScriptableObjects/GameSettings"
     let tickDelay = gameSettings.SnakeTick
     let snakeMesh = gameSettings.SnakeMesh
     let snakeMaterial = gameSettings.SnakeMaterial
-    let startPosition = gameSettings.StartPosition
-
+    let startPosition = gameSettings.StartPosition    
+    
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
-   
+
+    let launchCollision()  = 
+        em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
+        
     member this.TickQuery = this.GetEntityQuery [|ComponentType.ReadOnly<Tick>()|]
     member this.DelayQuery = this.GetEntityQuery [|ComponentType.ReadOnly<Delay>()|]
     member this.SegmentQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeSegments>()|]
     member this.SnakeArrayQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeArrayBuffer>()|]
     member this.DirectionQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeDirection>()|]
+    member this.SnakeFoodQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeFood>()|]
 
     member this.SnakeArchetype = em.CreateArchetype [|
         ComponentType.ReadWrite<Translation>()
@@ -36,39 +41,50 @@ type SnakeController() =
         ComponentType.ReadWrite<RenderMesh>()
     |]
 
-    member this.Segment = 
-        this.SnakeArchetype
-        |> em.CreateEntity
-        |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
-        
+    member this.isOnFood snakeHeadPos =
+        use foodArray = this.SnakeFoodQuery.ToEntityArray Allocator.TempJob
+        let foodPos = em.GetComponentData<Translation> foodArray.[0]
+        foodPos.Value = snakeHeadPos
+
     member this.MoveSnake() =
         let direction = 
-            use array = this.DirectionQuery.ToEntityArray(Allocator.TempJob)
+            use array = this.DirectionQuery.ToEntityArray Allocator.TempJob
             em.GetComponentData<SnakeDirection>(array.[0]).direction
 
-        let snakeBuffer =
-            use array = this.SnakeArrayQuery.ToEntityArray(Allocator.TempJob)
+        let getSnakeBuffer() =
+            use array = this.SnakeArrayQuery.ToEntityArray Allocator.TempJob
             em.GetBuffer<SnakeArrayBuffer>(array.[0])
+            
+        let newHeadPos = getSnakeBuffer().Reinterpret<float3>().[0] + direction
 
-        snakeBuffer.RemoveAt(snakeBuffer.Length-1)
-        snakeBuffer.Insert(0, new SnakeArrayBuffer(snakeBuffer.Reinterpret<float3>().[0] + direction))
+        if this.isOnFood newHeadPos then
+            use array = this.SnakeFoodQuery.ToEntityArray Allocator.TempJob
+            em.DestroyEntity array.[0]
+        else
+            let buff = getSnakeBuffer()
+            buff.RemoveAt <| buff.Length-1
 
-        let snakeArray = snakeBuffer.Reinterpret<float3>().ToNativeArray Allocator.TempJob
+        let buff = getSnakeBuffer()
 
-        em.DestroyEntity(this.SegmentQuery)
+        buff.Insert(0, new SnakeArrayBuffer(newHeadPos))
+
+        use snakeArray = buff.Reinterpret<float3>().ToNativeArray Allocator.TempJob
+      
+        em.DestroyEntity this.SegmentQuery
 
         let createEntity i pos =
-            let e = em.Instantiate(this.Segment)
             let last = snakeArray.Length - 1
-            em.AddComponentF (new Translation(Value = pos)) e |> ignore
+            let e = em.CreateEntity this.SnakeArchetype
+                    |> em.SetComponentDataF (new Translation(Value = pos))
+                    |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
             match i with        
                 | 0 -> em.AddComponentF (new SnakeHead()) e                 |>ignore
                 | x when x = last -> em.AddComponentF (new SnakeEnd()) e    |>ignore
                 | _ -> ()
 
-        snakeArray |> Seq.iteri createEntity
-
-        snakeArray.Dispose()
+        match Seq.exists (fun x -> x = snakeArray.[0]) (Seq.tail snakeArray) with
+            | true -> launchCollision()
+            | false -> snakeArray |> Seq.iteri createEntity
                 
     override this.OnCreate() =
         em.CreateArchetype [||]
@@ -82,7 +98,6 @@ type SnakeController() =
         |> em.SetComponentDataF (Translation(Value=startPosition))
         |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
         |> ignore
-        ()
 
         this.SnakeArchetype
         |> em.CreateEntity
@@ -90,16 +105,15 @@ type SnakeController() =
         |> em.SetComponentDataF (Translation(Value=float3(startPosition.x + 1.f, startPosition.y, startPosition.z)))
         |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
         |> ignore
-        ()
 
         let buffer =
             em.CreateArchetype [| ComponentType.ReadWrite<SnakeArrayBuffer>() |]
             |> em.CreateEntity
             |> em.GetBuffer<SnakeArrayBuffer>
 
-        buffer.Add (SnakeArrayBuffer(float3(0.f,0.f,0.f))) |> ignore
-        buffer.Add (SnakeArrayBuffer(float3(1.f,0.f,0.f))) |> ignore
-        buffer.Add (SnakeArrayBuffer(float3(2.f,0.f,0.f))) |> ignore
+        buffer.Add <| SnakeArrayBuffer(float3(0.f,0.f,0.f)) |> ignore
+        buffer.Add <| SnakeArrayBuffer(float3(1.f,0.f,0.f)) |> ignore
+        buffer.Add <| SnakeArrayBuffer(float3(2.f,0.f,0.f)) |> ignore
                                                               
     override this.OnUpdate() =
         this.TickQuery.ForEach(fun(e) ->

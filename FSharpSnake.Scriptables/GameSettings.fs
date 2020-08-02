@@ -26,6 +26,11 @@ type GameSettings() =
     let mutable lineScale: float32 = 0.1f
 
     [<SerializeField>]
+    let mutable foodMaterial: Material = null
+    [<SerializeField>]
+    let mutable foodMesh: Mesh = null
+
+    [<SerializeField>]
     let mutable boundsSize: Vector3 = Vector3(0.f, 0.f, 0.f)
 
     [<SerializeField>]
@@ -44,6 +49,11 @@ type GameSettings() =
         with get () = lineMesh
     member this.LineScale
            with get () = lineScale
+
+    member this.FoodMaterial
+        with get () = foodMaterial
+    member this.FoodMesh
+       with get () = foodMesh
 
     member this.BoundsSize
         with get () = boundsSize
