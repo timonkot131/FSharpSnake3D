@@ -16,15 +16,16 @@ type GameController() =
     let snakeSystem =
         World.DefaultGameObjectInjectionWorld.GetExistingSystem<SnakeController>()
         
-
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
 
     member this.SnakeCollisionQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeCollision>()|]
 
     override this.OnUpdate() =
-        this.SnakeCollisionQuery.ForEachComponent(fun e (comp: SnakeCollision) -> 
-            Debug.Log "Game Over"    
-            snakeSystem.Enabled <- false
-            em.DestroyEntity e
-        )
+        use arr = this.SnakeCollisionQuery.ToEntityArray Allocator.TempJob
+        Seq.tryHead arr |> function
+            | Some e ->
+                Debug.Log "Game Over"    
+                snakeSystem.Enabled <- false
+                em.DestroyEntity e
+            | None -> ()
 

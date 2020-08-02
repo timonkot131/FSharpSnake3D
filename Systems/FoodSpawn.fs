@@ -27,7 +27,8 @@ type FoodSpawn() =
     let minY, maxY = minmaxRelative startPos.y bounds.y
     let minZ, maxZ = minmaxRelative startPos.z bounds.z
 
-    let randRange (min:float32) max = Random.Range(min,max) |> math.round
+    let range (min: float32) max = Random.Range(min, max)
+    let randRange (min:float32) = range min >> math.round
 
     let rec getRandomPoint segments=
         let randPoint = float3 (
@@ -39,7 +40,6 @@ type FoodSpawn() =
         if Seq.exists (fun x -> x = randPoint) segments then
             getRandomPoint segments
         else randPoint
-
 
     member this.SnakeBufferQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeArrayBuffer>()|] 
     member this.SnakeFoodQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeFood>()|]

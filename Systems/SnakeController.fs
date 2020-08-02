@@ -75,11 +75,11 @@ type SnakeController() =
         let createEntity i pos =
             let last = snakeArray.Length - 1
             let e = em.CreateEntity this.SnakeArchetype
-                    |> em.SetComponentDataF (new Translation(Value = pos))
+                    |> em.SetComponentDataF (Translation(Value = pos))
                     |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
             match i with        
-                | 0 -> em.AddComponentF (new SnakeHead()) e                 |>ignore
-                | x when x = last -> em.AddComponentF (new SnakeEnd()) e    |>ignore
+                | 0 -> em.AddComponentF <| SnakeHead() <|e                  |>ignore
+                | x when x = last -> em.AddComponentF <| SnakeEnd() <| e    |>ignore
                 | _ -> ()
 
         match Seq.exists (fun x -> x = snakeArray.[0]) (Seq.tail snakeArray) with
@@ -110,10 +110,12 @@ type SnakeController() =
             em.CreateArchetype [| ComponentType.ReadWrite<SnakeArrayBuffer>() |]
             |> em.CreateEntity
             |> em.GetBuffer<SnakeArrayBuffer>
+        
+        let createBuffer x y z = float3(x, y, z) |> SnakeArrayBuffer
 
-        buffer.Add <| SnakeArrayBuffer(float3(0.f,0.f,0.f)) |> ignore
-        buffer.Add <| SnakeArrayBuffer(float3(1.f,0.f,0.f)) |> ignore
-        buffer.Add <| SnakeArrayBuffer(float3(2.f,0.f,0.f)) |> ignore
+        buffer.Add <| createBuffer 0.f 0.f 0.f |> ignore
+        buffer.Add <| createBuffer 1.f 0.f 0.f |> ignore
+        buffer.Add <| createBuffer 2.f 0.f 0.f |> ignore
                                                               
     override this.OnUpdate() =
         this.TickQuery.ForEach(fun(e) ->
