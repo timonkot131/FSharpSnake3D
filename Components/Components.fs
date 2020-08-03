@@ -61,3 +61,7 @@ type SnakeCollision =
 type SnakeFood =
     struct interface IComponentData
     end
+
+type SnakeMoved =
+    struct interface IComponentData
+    end

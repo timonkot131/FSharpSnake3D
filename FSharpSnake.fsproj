@@ -49,12 +49,13 @@
     <Compile Include="AssemblyInfo.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
+    <Compile Include="Utilities\Transforms.fs" />
     <Compile Include="Extensions\Extensions.fs" />
     <Compile Include="Components\Components.fs" />
     <Compile Include="FSharpSnake.Scriptables\GameSettings.fs" />
-    <Compile Include="Systems\SnakeBounds.fs" />
     <Compile Include="Systems\FoodSpawn.fs" />
     <Compile Include="Systems\SnakeController.fs" />
+    <Compile Include="Systems\SnakeBounds.fs" />
     <Compile Include="Systems\GameController.fs" />
     <Compile Include="Systems\PlayerInputReceiver.fs" />
   </ItemGroup>

@@ -15,7 +15,7 @@ type PlayerInputReceiver() =
         Debug.Log("aaee")
         em.CreateArchetype [||]
         |> em.CreateEntity
-        |> em.AddComponentF (new SnakeDirection(float3.Left))
+        |> em.AddComponent' (new SnakeDirection(float3.Left))
 
     member this.ApplyDirection dir =
         Debug.Log(dir.ToString())

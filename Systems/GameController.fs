@@ -12,16 +12,16 @@ open FSharpSnake.Components
 
 type GameController() = 
     inherit SystemBase()
-
+    
     let snakeSystem =
         World.DefaultGameObjectInjectionWorld.GetExistingSystem<SnakeController>()
         
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
 
-    member this.SnakeCollisionQuery = this.GetEntityQuery [|ComponentType.ReadOnly<SnakeCollision>()|]
+    let snakeCollisionQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeCollision>()|]
 
     override this.OnUpdate() =
-        use arr = this.SnakeCollisionQuery.ToEntityArray Allocator.TempJob
+        use arr = snakeCollisionQuery.ToEntityArray Allocator.TempJob
         Seq.tryHead arr |> function
             | Some e ->
                 Debug.Log "Game Over"    

@@ -22,9 +22,6 @@ type SnakeController() =
     let startPosition = gameSettings.StartPosition    
     
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
-
-    let launchCollision()  = 
-        em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
         
     member this.TickQuery = this.GetEntityQuery [|ComponentType.ReadOnly<Tick>()|]
     member this.DelayQuery = this.GetEntityQuery [|ComponentType.ReadOnly<Delay>()|]
@@ -66,7 +63,7 @@ type SnakeController() =
 
         let buff = getSnakeBuffer()
 
-        buff.Insert(0, new SnakeArrayBuffer(newHeadPos))
+        buff.Insert(0, SnakeArrayBuffer newHeadPos)
 
         use snakeArray = buff.Reinterpret<float3>().ToNativeArray Allocator.TempJob
       
@@ -75,35 +72,35 @@ type SnakeController() =
         let createEntity i pos =
             let last = snakeArray.Length - 1
             let e = em.CreateEntity this.SnakeArchetype
-                    |> em.SetComponentDataF (Translation(Value = pos))
-                    |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
+                    |> em.SetComponentData' (Translation(Value = pos))
+                    |> em.SetSharedComponentData' (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
             match i with        
-                | 0 -> em.AddComponentF <| SnakeHead() <|e                  |>ignore
-                | x when x = last -> em.AddComponentF <| SnakeEnd() <| e    |>ignore
+                | 0 -> em.AddComponent' <| SnakeHead() <|e                  |> ignore
+                | x when x = last -> em.AddComponent' <| SnakeEnd() <| e    |> ignore
                 | _ -> ()
 
         match Seq.exists (fun x -> x = snakeArray.[0]) (Seq.tail snakeArray) with
-            | true -> launchCollision()
+            | true -> em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
             | false -> snakeArray |> Seq.iteri createEntity
-                
+
     override this.OnCreate() =
         em.CreateArchetype [||]
         |> em.CreateEntity
-        |> em.AddComponentF (Tick())
+        |> em.AddComponent' (Tick())
         |> ignore
        
         this.SnakeArchetype
         |> em.CreateEntity
-        |> em.AddComponentF (SnakeHead())
-        |> em.SetComponentDataF (Translation(Value=startPosition))
-        |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
+        |> em.AddComponent' (SnakeHead())
+        |> em.SetComponentData' (Translation(Value=startPosition))
+        |> em.SetSharedComponentData' (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
         |> ignore
 
         this.SnakeArchetype
         |> em.CreateEntity
-        |> em.AddComponentF (SnakeEnd())
-        |> em.SetComponentDataF (Translation(Value=float3(startPosition.x + 1.f, startPosition.y, startPosition.z)))
-        |> em.SetSharedComponentDataF (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
+        |> em.AddComponent' (SnakeEnd())
+        |> em.SetComponentData' (Translation(Value=float3(startPosition.x + 1.f, startPosition.y, startPosition.z)))
+        |> em.SetSharedComponentData' (RenderMesh(mesh=snakeMesh, material=snakeMaterial))
         |> ignore
 
         let buffer =
@@ -119,15 +116,16 @@ type SnakeController() =
                                                               
     override this.OnUpdate() =
         this.TickQuery.ForEach(fun(e) ->
-            em.AddComponentF (Delay(Time.time + tickDelay)) e |> ignore
+            em.AddComponent' (Delay(Time.time + tickDelay)) e           |> ignore
             this.MoveSnake()
-            em.RemoveComponent<Tick> e                        |> ignore
+            em.CreateEntity [|ComponentType.ReadOnly<SnakeMoved>()|]    |> ignore
+            em.RemoveComponent<Tick> e                                  |> ignore
         )
 
         this.DelayQuery.ForEachComponent(fun e (comp: Delay) ->
              if (Time.time > comp.duration) then
                 em.RemoveComponent<Delay> e |> ignore
-                em.AddComponentF (Tick()) e |> ignore
+                em.AddComponent' (Tick()) e |> ignore
         )
 
            

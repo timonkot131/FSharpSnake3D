@@ -9,33 +9,30 @@ open Unity.Mathematics
 open FSharpSnake.Scriptables
 open FSharpSnake.Extensions
 open FSharpSnake.Components
+open Transforms
 
 type FoodSpawn() = 
     inherit SystemBase()
 
     let gameSettings = Resources.Load<GameSettings> "ScriptableObjects/GameSettings"
-    let bounds = gameSettings.BoundsSize
+    let bounds =
+        let vec = gameSettings.BoundsSize
+        float3(vec.x, vec.y, vec.z)
     let startPos = gameSettings.StartPosition
     let foodMesh = gameSettings.FoodMesh
     let foodMat = gameSettings.FoodMaterial
 
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
     
-    let minmaxRelative s bnds = ((s - bnds) / 2.f, (s + bnds) / 2.f)
-    
-    let minX, maxX = minmaxRelative startPos.x bounds.x
-    let minY, maxY = minmaxRelative startPos.y bounds.y
-    let minZ, maxZ = minmaxRelative startPos.z bounds.z
+    let ranges = Transforms.rangesStartToBounds startPos <| bounds
 
-    let range (min: float32) max = Random.Range(min, max)
-    let randRange (min:float32) = range min >> math.round
+    let randRange (min:float32) max = Random.Range(min+1.f, max-1.f) |> math.round
 
     let rec getRandomPoint segments=
-        let randPoint = float3 (
-                            randRange minX maxX,
-                            randRange minY maxY,
-                            randRange minZ maxZ
-                        )
+        let randPoint =
+            float3 ( randRange ranges.minX ranges.maxX,
+                     randRange ranges.minY ranges.maxY,
+                     randRange ranges.minZ ranges.maxZ )
 
         if Seq.exists (fun x -> x = randPoint) segments then
             getRandomPoint segments
@@ -60,8 +57,8 @@ type FoodSpawn() =
                 ComponentType.ReadWrite<RenderBounds>()
                 ComponentType.ReadWrite<RenderMesh>()
             |]
-            |> em.SetComponentDataF (Translation(Value=point))
-            |> em.SetSharedComponentDataF (RenderMesh(mesh = foodMesh, material = foodMat))
+            |> em.SetComponentData' (Translation(Value=point))
+            |> em.SetSharedComponentData' (RenderMesh(mesh = foodMesh, material = foodMat))
             |> ignore
 
     

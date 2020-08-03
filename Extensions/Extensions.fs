@@ -10,16 +10,16 @@ open System
 
 module Extensions =
     type EntityManager with
-        member self.AddComponentF (comp: 'a) (e: Entity) =
+        member self.AddComponent' (comp: 'a) (e: Entity) =
             self.AddComponentData<'a>(e, comp) |> ignore
             e
-        member self.AddSharedComponentF (comp: 'a) (e: Entity) = 
+        member self.AddSharedComponent' (comp: 'a) (e: Entity) = 
             self.AddSharedComponentData<'a>(e, comp) |> ignore
             e
-        member self.SetComponentDataF(comp: 'a) (e: Entity) = 
+        member self.SetComponentData'(comp: 'a) (e: Entity) = 
             self.SetComponentData<'a>(e, comp) |> ignore
             e
-        member self.SetSharedComponentDataF(comp: 'a) (e: Entity) = 
+        member self.SetSharedComponentData'(comp: 'a) (e: Entity) = 
             self.SetSharedComponentData<'a>(e, comp) |> ignore
             e                
 

@@ -31,6 +31,11 @@ type GameSettings() =
     let mutable foodMesh: Mesh = null
 
     [<SerializeField>]
+    let mutable dangerZone: float32 = 3.f
+    [<SerializeField>]
+    let mutable dangerMaterial: Material = null
+
+    [<SerializeField>]
     let mutable boundsSize: Vector3 = Vector3(0.f, 0.f, 0.f)
 
     [<SerializeField>]
@@ -53,7 +58,12 @@ type GameSettings() =
     member this.FoodMaterial
         with get () = foodMaterial
     member this.FoodMesh
-       with get () = foodMesh
+        with get () = foodMesh
+
+    member this.DangerZone
+        with get() = dangerZone
+    member this.DangerMaterial
+        with get() = dangerMaterial
 
     member this.BoundsSize
         with get () = boundsSize
