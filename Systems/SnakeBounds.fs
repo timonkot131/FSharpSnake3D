@@ -23,37 +23,8 @@ type SnakeBounds() =
     let lineScale = gameSettings.LineScale
     let startPos = gameSettings.StartPosition
     let dangerZone = gameSettings.DangerZone
-    let dangerMaterial = gameSettings.DangerMaterial
-    let snakeMaterial = gameSettings.SnakeMaterial
-
-    let em = World.DefaultGameObjectInjectionWorld.EntityManager
-    let snakeSegmentsQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeSegments>()|]
-    let snakeMovedQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeMoved>()|]
-    
-    let setMaterial (e: Entity) (mat: Material) =
-        let rendMesh = em.GetSharedComponentData<RenderMesh>(e)
-        em.SetSharedComponentData' 
-        <| RenderMesh(mesh = rendMesh.mesh, material = mat) <| e
-        |> ignore      
-
-
- 
-    let (|InBounds|NearBounds|NotNearOrInBounds|) (ranges, segment: float3) =
-        match ranges, segment with
-            | { minX = pos}, _ | { maxX = pos}, _ when pos = segment.x -> InBounds
-            | { minY = pos}, _ | { maxY = pos}, _ when pos = segment.y -> InBounds
-            | { minZ = pos}, _ | { maxZ = pos}, _ when pos = segment.z -> InBounds
-            | _, segment when segment.x <= ranges.minX + dangerZone ||
-                              segment.x >= ranges.maxX - dangerZone -> NearBounds
-            | _, segment when segment.y <= ranges.minY + dangerZone ||
-                              segment.y >= ranges.maxY - dangerZone -> NearBounds
-            | _, segment when segment.z <= ranges.minZ + dangerZone ||
-                              segment.z >= ranges.maxZ - dangerZone -> NearBounds
-            | _, _ -> NotNearOrInBounds
-
-
-    override this.OnCreate() =
-
+        
+    override __.OnCreate() =
         let p1 = float3(startPos.x - boundsSize.x / 2.f, startPos.y - boundsSize.y / 2.f, startPos.z - boundsSize.z /2.f) 
         let p2 = float3(p1.x, p1.y, p1.z + boundsSize.z )
         let p3 = float3(p1.x + boundsSize.x, p1.y, p1.z)
@@ -100,16 +71,4 @@ type SnakeBounds() =
         createLine(p1, p2); createLine(p1, p3); createLine(p4, p2); createLine(p4, p3)
         createLine(p5, p6); createLine(p5, p7); createLine(p8, p6); createLine(p8, p7)
 
-    override this.OnUpdate() = 
-        use arr = snakeMovedQuery.ToEntityArray Allocator.TempJob
-        if not <| Seq.isEmpty arr then
-            use segments = snakeSegmentsQuery.ToEntityArray Allocator.TempJob
-            let head = Seq.find (fun e -> em.HasComponent<SnakeHead> e) segments
-            let headPos = em.GetComponentData<Translation>(head).Value
-            let bounds = rangesStartToBounds startPos boundsSize
-            segments |> Seq.iter (fun e ->
-                let pos = em.GetComponentData<Translation>(e).Value
-                match bounds, pos with
-                    | NearBounds -> setMaterial e dangerMaterial
-                    | InBounds-> em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
-                    | NotNearOrInBounds-> setMaterial e snakeMaterial)
+    override __.OnUpdate() = ()

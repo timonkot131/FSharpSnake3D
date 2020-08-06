@@ -58,6 +58,7 @@
     <Compile Include="Systems\SnakeBounds.fs" />
     <Compile Include="Systems\GameController.fs" />
     <Compile Include="Systems\PlayerInputReceiver.fs" />
+    <Compile Include="Systems\SnakeDraw.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
