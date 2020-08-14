@@ -41,32 +41,42 @@ type GameSettings() =
     [<SerializeField>]
     let mutable startPosition: float3 = float3(0.0f, 0.0f, 0.0f)
 
-    member this.SnakeMesh
+    [<SerializeField>]
+    let mutable cameraTurnAngle: float32 = 10.f
+    [<SerializeField>]
+    let mutable cameraDistance: float32 = 20.f
+
+    member __.SnakeMesh
         with get () = snakeMesh
-    member this.SnakeMaterial
+    member __.SnakeMaterial
         with get () = snakeMaterial
-    member this.SnakeTick
+    member __.SnakeTick
         with get () = snakeTick
 
-    member this.LineMaterial
+    member __.LineMaterial
         with get () = lineMaterial
-    member this.LineMesh
+    member __.LineMesh
         with get () = lineMesh
-    member this.LineScale
+    member __.LineScale
            with get () = lineScale
 
-    member this.FoodMaterial
+    member __.FoodMaterial
         with get () = foodMaterial
-    member this.FoodMesh
+    member __.FoodMesh
         with get () = foodMesh
 
-    member this.DangerZone
+    member __.DangerZone
         with get() = dangerZone
-    member this.DangerMaterial
+    member __.DangerMaterial
         with get() = dangerMaterial
 
-    member this.BoundsSize
+    member __.BoundsSize
         with get () = boundsSize
 
-    member this.StartPosition
+    member __.StartPosition
         with get () = startPosition
+
+    member __.CameraDistance
+        with get() = cameraDistance
+    member __.CameraTurnAngle
+        with get() = cameraTurnAngle

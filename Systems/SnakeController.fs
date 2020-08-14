@@ -9,6 +9,7 @@ open Unity.Mathematics
 open FSharpSnake.Scriptables
 open FSharpSnake.Extensions
 open FSharpSnake.Components
+open EntityUtil
 open Unity.Jobs
 
 [<UpdateAfter(typeof<FoodSpawn>)>]
@@ -22,15 +23,7 @@ type SnakeController() =
     let startPosition = gameSettings.StartPosition    
     
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
-
-    let forQuer (q: EntityQuery) (func: NativeArray<Entity> -> _) =
-        use a = q.ToEntityArray Allocator.TempJob
-        func a
-
-    let forQuer1 (q: EntityQuery) (func: Entity -> _) =
-        use a = q.ToEntityArray Allocator.TempJob
-        func a.[0]
-        
+    
     let tickQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<Tick>()|]
     let delayQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<Delay>()|]
     let segmentQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeSegments>()|]
@@ -39,7 +32,7 @@ type SnakeController() =
     let snakeFoodQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeFood>()|]
 
     let isOnFood snakeHeadPos =
-        let foodPos = forQuer1 snakeFoodQuery em.GetComponentData<Translation>
+        let foodPos = forQuery1 snakeFoodQuery em.GetComponentData<Translation>
         foodPos.Value = snakeHeadPos
 
     let snakeArchetype = em.CreateArchetype [|
@@ -51,8 +44,8 @@ type SnakeController() =
     |]
 
     let moveSnake() =
-        let direction = (forQuer1 directionQuery em.GetComponentData<SnakeDirection>).direction
-        let getSnakeBuffer() = forQuer1 snakeArrayQuery em.GetBuffer<SnakeArrayBuffer>
+        let direction = (forQuery1 directionQuery em.GetComponentData<SnakeDirection>).direction
+        let getSnakeBuffer() = forQuery1 snakeArrayQuery em.GetBuffer<SnakeArrayBuffer>
             
         let newHeadPos = getSnakeBuffer().Reinterpret<float3>().[0] + direction
 
@@ -119,11 +112,9 @@ type SnakeController() =
             em.CreateEntity [|ComponentType.ReadOnly<SnakeMoved>()|]    |> ignore
             em.RemoveComponent<Tick> e                                  |> ignore
         )
-
+        
         delayQuery.ForEachComponent(fun e (comp: Delay) ->
              if (Time.time > comp.duration) then
                 em.RemoveComponent<Delay> e |> ignore
-                em.AddComponent' (Tick()) e |> ignore
-        )
-
-           
+                em.AddComponent<Tick> e |> ignore
+        )     

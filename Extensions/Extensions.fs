@@ -51,4 +51,13 @@ module Extensions =
            static member Right = float3(1.f, 0.f, 0.f)
            static member Forward = float3(0.f, 0.f, 1.f)
            static member Back = float3(0.f, 0.f, -1.f)
-           member self.Plus (f: float3) = float3(self.x + f.x, self.y + f.y, self.z + f.z)
+           member self.ToVector3 = Vector3(self.x, self.y, self.z)
+
+    type Vector3 with
+            member self.ToFloat3 = float3(self.x, self.y, self.z)
+
+    type float4 with
+           member self.ToQuartenion = Quaternion(self.x, self.y, self.z, self.w)
+
+    type Quaternion with
+        member self.ToFloat4 = float4(self.x, self.y, self.z, self.w)

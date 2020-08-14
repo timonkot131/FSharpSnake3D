@@ -50,6 +50,7 @@
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
     <Compile Include="Utilities\Transforms.fs" />
+    <Compile Include="Utilities\EntityUtil.fs" />
     <Compile Include="Extensions\Extensions.fs" />
     <Compile Include="Components\Components.fs" />
     <Compile Include="FSharpSnake.Scriptables\GameSettings.fs" />
@@ -59,6 +60,7 @@
     <Compile Include="Systems\GameController.fs" />
     <Compile Include="Systems\PlayerInputReceiver.fs" />
     <Compile Include="Systems\SnakeDraw.fs" />
+    <Compile Include="Systems\CameraController.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -107,7 +109,8 @@
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) C:\Users\Тимофей\FSharpSnake3D\Assets
 $(TargetDir)pdb2mdb $(TargetPath)
-copy $(TargetPath).mdb C:\Users\Тимофей\FSharpSnake3D\Assets</PostBuildEvent>
+copy $(TargetPath).mdb C:\Users\Тимофей\FSharpSnake3D\Assets
+echo %time%</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

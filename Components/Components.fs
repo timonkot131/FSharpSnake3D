@@ -7,18 +7,16 @@ open Unity.Transforms
 open Unity.Rendering
 open Unity.Mathematics
 
-type SnakeEnd = 
-    struct interface IComponentData
-    end
+[<Struct>]
+type SnakeEnd = interface IComponentData
 
 type SnakeSegments  = 
     struct interface IComponentData
        val direction : float3
     end
 
-type SnakeHead =
-    struct interface IComponentData
-    end
+[<Struct>]
+type SnakeHead = interface IComponentData
 
 type PlayerInpur = 
     struct interface IComponentData
@@ -32,9 +30,8 @@ type BoundLine =
         new(p1:float3, p2:float3) = {p1 = p1; p2 = p2}
     end
 
-type Tick =
-    struct interface IComponentData
-    end
+[<Struct>]
+type Tick = interface IComponentData
 
 type Delay =
     struct interface IComponentData
@@ -54,14 +51,11 @@ type SnakeArrayBuffer =
         new(pos: float3) = {pos = pos}
     end
 
-type SnakeCollision =
-    struct interface IComponentData
-    end
+[<Struct>]
+type SnakeCollision = interface IComponentData
 
-type SnakeFood =
-    struct interface IComponentData
-    end
+[<Struct>]
+type public SnakeFood = interface IComponentData
 
-type SnakeMoved =
-    struct interface IComponentData
-    end
+[<Struct>]
+type SnakeMoved = interface IComponentData

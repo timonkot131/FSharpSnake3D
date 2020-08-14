@@ -22,7 +22,6 @@ type SnakeBounds() =
     let lineMesh = gameSettings.LineMesh
     let lineScale = gameSettings.LineScale
     let startPos = gameSettings.StartPosition
-    let dangerZone = gameSettings.DangerZone
         
     override __.OnCreate() =
         let p1 = float3(startPos.x - boundsSize.x / 2.f, startPos.y - boundsSize.y / 2.f, startPos.z - boundsSize.z /2.f) 
