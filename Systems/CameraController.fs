@@ -34,4 +34,4 @@ type CameraController() =
         transform.Rotate(Vector3(1.f, 0.f, 0.f), dir.y * angle * Time.deltaTime)
         transform.Rotate(Vector3(0.f, 1.f, 0.f), -dir.x * angle * Time.deltaTime, Space.World)
 
-        transform.Translate(Vector3(0.f, 0.f, radius))
+        transform.Translate(Vector3(0.f, 0.f, -radius))

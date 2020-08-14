@@ -59,3 +59,6 @@ type public SnakeFood = interface IComponentData
 
 [<Struct>]
 type SnakeMoved = interface IComponentData
+
+[<Struct>]
+type GamePause = interface IComponentData

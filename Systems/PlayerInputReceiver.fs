@@ -24,7 +24,7 @@ type PlayerInputReceiver() =
     let applyCameraDirection dir =
         forQuery1 cameraQuery <| em.SetComponentData' (CameraComp(direction = dir)) |> ignore
 
-    override this.OnUpdate() =
+    override __.OnUpdate() =
         if Input.GetKeyUp KeyCode.Keypad4 then applySnakeDirection float3.Left
         if Input.GetKeyUp KeyCode.Keypad6 then applySnakeDirection float3.Right
         if Input.GetKeyUp KeyCode.Keypad2 then applySnakeDirection float3.Back
@@ -37,3 +37,5 @@ type PlayerInputReceiver() =
         if Input.GetKey KeyCode.RightArrow then applyCameraDirection float3.Right
         if Input.GetKey KeyCode.UpArrow then applyCameraDirection float3.Up
         if Input.GetKey KeyCode.DownArrow then applyCameraDirection float3.Down
+
+        if Input.GetKeyUp KeyCode.Space then em.CreateEntity [|ComponentType.ReadOnly<GamePause>()|] |> ignore

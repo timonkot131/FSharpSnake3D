@@ -57,9 +57,9 @@
     <Compile Include="Systems\FoodSpawn.fs" />
     <Compile Include="Systems\SnakeController.fs" />
     <Compile Include="Systems\SnakeBounds.fs" />
-    <Compile Include="Systems\GameController.fs" />
     <Compile Include="Systems\PlayerInputReceiver.fs" />
     <Compile Include="Systems\SnakeDraw.fs" />
+    <Compile Include="Systems\GameController.fs" />
     <Compile Include="Systems\CameraController.fs" />
   </ItemGroup>
   <ItemGroup>
