@@ -45,6 +45,12 @@ type SnakeDirection =
         new(direction: float3) = {direction = direction}
     end
 
+[<Struct>]
+type GameOver = interface IComponentData
+
+[<Struct>]
+type GameRestart = interface IComponentData
+
 type SnakeArrayBuffer =
     struct interface IBufferElementData
         val pos: float3
@@ -61,4 +67,4 @@ type public SnakeFood = interface IComponentData
 type SnakeMoved = interface IComponentData
 
 [<Struct>]
-type GamePause = interface IComponentData
+type PausePressed = interface IComponentData

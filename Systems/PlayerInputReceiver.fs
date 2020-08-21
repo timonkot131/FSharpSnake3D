@@ -38,4 +38,4 @@ type PlayerInputReceiver() =
         if Input.GetKey KeyCode.UpArrow then applyCameraDirection float3.Up
         if Input.GetKey KeyCode.DownArrow then applyCameraDirection float3.Down
 
-        if Input.GetKeyUp KeyCode.Space then em.CreateEntity [|ComponentType.ReadOnly<GamePause>()|] |> ignore
+        if Input.GetKeyUp KeyCode.Space then em.CreateEntity [|ComponentType.ReadOnly<PausePressed>()|] |> ignore

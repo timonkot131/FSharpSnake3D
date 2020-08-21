@@ -10,6 +10,7 @@ open FSharpSnake.Scriptables
 open FSharpSnake.Extensions
 open FSharpSnake.Components
 open EntityUtil
+open Transforms
 open Unity.Jobs
 
 [<UpdateAfter(typeof<FoodSpawn>)>]
@@ -18,9 +19,10 @@ type SnakeController() =
     
     let gameSettings = Resources.Load<GameSettings> "ScriptableObjects/GameSettings"
     let tickDelay = gameSettings.SnakeTick
-    let snakeMesh = gameSettings.SnakeMesh
-    let snakeMaterial = gameSettings.SnakeMaterial
+    let boundSize = gameSettings.BoundsSize
     let startPosition = gameSettings.StartPosition    
+
+    let ranges = rangesStartToBounds startPosition boundSize.ToFloat3
     
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
     
@@ -30,6 +32,8 @@ type SnakeController() =
     let snakeArrayQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeArrayBuffer>()|]
     let directionQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeDirection>()|]
     let snakeFoodQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<SnakeFood>()|]
+    let restartQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<GameRestart>()|]
+    let gameOverQuery = em.CreateEntityQuery [|ComponentType.ReadOnly<GameOver>()|]
 
     let isOnFood snakeHeadPos =
         let foodPos = forQuery1 snakeFoodQuery em.GetComponentData<Translation>
@@ -42,6 +46,13 @@ type SnakeController() =
         ComponentType.ReadWrite<RenderBounds>()
         ComponentType.ReadWrite<RenderMesh>()
     |]
+
+    let fillBuffer (bufferArray: DynamicBuffer<SnakeArrayBuffer>) = 
+        let createBuffer x y z = float3(startPosition.x + x, startPosition.y + y, startPosition.z + z) |> SnakeArrayBuffer
+
+        bufferArray.Add <| createBuffer 0.f 0.f 0.f |> ignore
+        bufferArray.Add <| createBuffer 1.f 0.f 0.f |> ignore
+        bufferArray.Add <| createBuffer 2.f 0.f 0.f |> ignore
 
     let moveSnake() =
         let direction = (forQuery1 directionQuery em.GetComponentData<SnakeDirection>).direction
@@ -63,8 +74,9 @@ type SnakeController() =
       
         em.DestroyEntity segmentQuery
 
+        let last = snakeArray.Length - 1
+
         let createEntity i pos =
-            let last = snakeArray.Length - 1
             let e = em.CreateEntity snakeArchetype
                     |> em.SetComponentData' (Translation(Value = pos))
             match i with        
@@ -76,42 +88,32 @@ type SnakeController() =
         | true -> em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
         | false -> snakeArray |> Seq.iteri createEntity
 
-    override this.OnCreate() =
-        em.CreateArchetype [||]
-        |> em.CreateEntity
-        |> em.AddComponent' (Tick())
-        |> ignore
-       
-        snakeArchetype
-        |> em.CreateEntity
-        |> em.AddComponent' (SnakeHead())
-        |> em.SetComponentData' (Translation(Value=startPosition))
-        |> ignore
+        if inBounds ranges snakeArray.[0] then em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
 
-        snakeArchetype
-        |> em.CreateEntity
-        |> em.AddComponent' (SnakeEnd())
-        |> em.SetComponentData' (Translation(Value=float3(startPosition.x + 1.f, startPosition.y, startPosition.z)))
-        |> ignore
-
-        let buffer =
+    override __.OnCreate() =
             em.CreateArchetype [| ComponentType.ReadWrite<SnakeArrayBuffer>() |]
             |> em.CreateEntity
             |> em.GetBuffer<SnakeArrayBuffer>
-        
-        let createBuffer x y z = float3(x, y, z) |> SnakeArrayBuffer
+            |> fillBuffer
 
-        buffer.Add <| createBuffer 0.f 0.f 0.f |> ignore
-        buffer.Add <| createBuffer 1.f 0.f 0.f |> ignore
-        buffer.Add <| createBuffer 2.f 0.f 0.f |> ignore
+            em.CreateEntity [| ComponentType.ReadOnly<Tick>() |] |> ignore
     
-    override this.OnUpdate() =
+    override __.OnUpdate() =
         tickQuery.ForEach(fun(e) ->
-            em.AddComponent' (Delay(Time.time + tickDelay)) e           |> ignore
-            moveSnake()
-            em.CreateEntity [|ComponentType.ReadOnly<SnakeMoved>()|]    |> ignore
-            em.RemoveComponent<Tick> e                                  |> ignore
+            em.AddComponent' (Delay(Time.time + tickDelay)) e |> ignore
+            if forQuery gameOverQuery Seq.isEmpty then
+                moveSnake()
+                em.CreateEntity [|ComponentType.ReadOnly<SnakeMoved>()|] |> ignore
+            em.RemoveComponent<Tick> e |> ignore
         )
+
+        use restart = restartQuery.ToEntityArray Allocator.TempJob
+        Seq.tryHead restart |> Option.iter (fun e ->
+                em.DestroyEntity e
+                let buffer = forQuery1 snakeArrayQuery em.GetBuffer<SnakeArrayBuffer>
+                buffer.Clear()
+                fillBuffer buffer
+            )
         
         delayQuery.ForEachComponent(fun e (comp: Delay) ->
              if (Time.time > comp.duration) then

@@ -24,6 +24,7 @@ type SnakeDraw() =
     let dangerMaterial = gameSettings.DangerMaterial
     let snakeMesh = gameSettings.SnakeMesh
     let snakeMaterial = gameSettings.SnakeMaterial
+    let ranges = rangesStartToBounds startPos boundsSize
 
     let em = World.DefaultGameObjectInjectionWorld.EntityManager
 
@@ -46,11 +47,6 @@ type SnakeDraw() =
         
     let (|InBounds|NearBounds|NotNearOrInBounds|) (ranges, segment: float3) =
 
-        let inBounds (ranges: Ranges) (segment: float3) =     
-            List.exists2 (fun (p1: float32 list) p2-> p1.[0] = p2 || p1.[1] = p2)
-                [[ranges.minX; ranges.maxX]; [ranges.minY; ranges.maxY]; [ranges.minZ; ranges.maxZ]]
-                [segment.x; segment.y; segment.z] 
-
         let nearBounds (ranges: Ranges) (segment: float3) =     
             List.exists2 (fun (pl: float32 list) p-> not <| List.contains p pl )
                 [ [ranges.minX + dangerZone..ranges.maxX - dangerZone];
@@ -66,12 +62,11 @@ type SnakeDraw() =
     override __.OnUpdate() = 
         use arr = snakeMovedQuery.ToEntityArray Allocator.TempJob
         if not <| Seq.isEmpty arr then
+            em.DestroyEntity snakeMovedQuery
             use segments = snakeSegmentsQuery.ToEntityArray Allocator.TempJob
-            let bounds = rangesStartToBounds startPos boundsSize
             segments |> Seq.iter (fun e ->
                 setMesh e snakeMesh
                 let pos = em.GetComponentData<Translation>(e).Value
-                match bounds, pos with
-                | NearBounds -> setMaterial e dangerMaterial
-                | InBounds-> em.CreateEntity [|ComponentType.ReadOnly<SnakeCollision>()|] |> ignore
+                match ranges, pos with
+                | NearBounds | InBounds-> setMaterial e dangerMaterial
                 | NotNearOrInBounds-> setMaterial e snakeMaterial)
