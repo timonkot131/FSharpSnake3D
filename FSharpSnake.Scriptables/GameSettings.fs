@@ -37,7 +37,7 @@ type GameSettings() =
 
     [<SerializeField>]
     let mutable boundsSize: Vector3 = Vector3(0.f, 0.f, 0.f)
-
+    
     [<SerializeField>]
     let mutable startPosition: float3 = float3(0.0f, 0.0f, 0.0f)
 
@@ -45,6 +45,9 @@ type GameSettings() =
     let mutable cameraTurnAngle: float32 = 10.f
     [<SerializeField>]
     let mutable cameraDistance: float32 = 20.f
+
+    [<SerializeField>]
+    let mutable compassPosition: Vector3 = Vector3(0.f, 0.f, 0.f)
 
     member __.SnakeMesh
         with get () = snakeMesh
@@ -80,3 +83,6 @@ type GameSettings() =
         with get() = cameraDistance
     member __.CameraTurnAngle
         with get() = cameraTurnAngle
+
+    member __.CompassPosition
+           with get() = compassPosition
